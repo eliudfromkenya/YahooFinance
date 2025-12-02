@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="YahooFinance.Desktop/YahooFinance.Desktop.csproj" />
+  <Project Path="YahooFinance/YahooFinance.csproj" />
+</Solution>
