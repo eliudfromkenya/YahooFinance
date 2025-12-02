@@ -8,10 +8,12 @@ namespace YahooFinance.Infrastructure.Services;
 public sealed class YahooFinanceClient : IYahooFinanceClient
 {
     private readonly HttpClient httpClient;
+    private readonly IRequestThrottler throttler;
 
-    public YahooFinanceClient(HttpClient httpClient)
+    public YahooFinanceClient(HttpClient httpClient, IRequestThrottler throttler)
     {
         this.httpClient = httpClient;
+        this.throttler = throttler;
         this.httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36");
         this.httpClient.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en-US,en;q=0.9");
     }
@@ -19,6 +21,7 @@ public sealed class YahooFinanceClient : IYahooFinanceClient
     public async Task<IReadOnlyList<HistoricalQuote>> GetHistoricalAsync(string symbol, string range, CancellationToken cancellationToken)
     {
         var url = $"https://query1.finance.yahoo.com/v8/finance/chart/{Uri.EscapeDataString(symbol)}?interval=1d&range={Uri.EscapeDataString(range)}&events=div%2Csplit";
+        await throttler.WaitAsync(cancellationToken).ConfigureAwait(false);
         using var response = await httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
         using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
